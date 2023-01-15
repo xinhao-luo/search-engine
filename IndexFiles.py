@@ -80,6 +80,7 @@ class IndexFiles(object):
         t2.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS) 
         
         for root1, dirnames, filenames in os.walk(root1):
+            N = 0
             for filename in filenames:
 
                 print("adding", filename)
@@ -107,9 +108,13 @@ class IndexFiles(object):
                             continue
                     a = 0
                     for line in file2.readlines():
-                        a+=1
-                        if(a == 6):
-                            img = line 
+                        a += 1
+                        if(a == 6 and N > 5013):
+                            img = line[0:line.index('\t')]
+                            break 
+                        if(a == 7 and N <= 5013):
+                            img = line[0:line.index('\t')]
+                            break
                     contents = ' '.join(jieba.cut(contents))
                     file1.close()
                     doc = Document()
@@ -127,14 +132,14 @@ class IndexFiles(object):
                     writer.addDocument(doc)
                 except Exception as e:
                     print("Failed in indexDocs:", e)
-
+                N += 1
 if __name__ == '__main__':
     lucene.initVM()#vmargs=['-Djava.awt.headless=true'])
     print('lucene', lucene.VERSION)
     # import ipdb; ipdb.set_trace()
     start = datetime.now()
     try:
-        IndexFiles('163_html','163_graph_html','163_index')
+        IndexFiles('html','graph_html','index')
         end = datetime.now()
         print(end - start)
     except Exception as e:

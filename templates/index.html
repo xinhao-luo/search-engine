@@ -55,6 +55,7 @@
 								<ul class="dropdown">
 									<li><a href="./word">Search by words</a></li>
 									<li><a href="./img">Search by image</a></li>
+									<li><a href="./face">Search by face</a></li>
 								</ul>
 							</li>
 							<li><a href="https://github.com/JerryPW/final_project_EE208">About</a></li>
@@ -84,6 +85,27 @@
 											<form class="form-inline" method="GET" action='/wdresult'>
 												<input type="text" name="keyword" >
 												<button type="submit" class="btn btn-primary btn-learn" >Search</button>
+											</form>
+										</div>
+										<!--input form end-->
+									</div>
+								</div>
+							</div>
+						</div>
+					</li>
+					<li style="background-image: url(./static/images/img_bg_4.jpg);">
+						<div class="overlay-gradient"></div>
+						<div class="container-fluids">
+							<div class="row">
+								<div class="col-md-6 col-md-offset-3 col-md-pull-3 slider-text">
+									<div class="slider-text-inner text-center">
+										<h1>Search By faces</h1>
+										<!--input form-->
+										<div id="input_group" align=center>
+											<p>上传您想搜索的人脸图片</p>
+											<form class="form-inline" method="POST" action='/faceresult' enctype="multipart/form-data">
+												<input id="file" type="file" name="file" accept=".jpg,.png"><br />
+												<button type="submit" class="btn btn-primary btn-demo" >Search</button>
 											</form>
 										</div>
 										<!--input form end-->
@@ -125,7 +147,7 @@
 							</span>
 							<div class="desc">
 								<h3><a href="#">Crawler</a></h3>
-								<p>we have crawled over ten thousands pages and six thousands photos and faces.</p>
+								<p>we have crawled over ten thousands pages and four thousands photos and a small number of faces.</p>
 							</div>
 						</div>
 					</div>
@@ -147,7 +169,7 @@
 							</span>
 							<div class="desc">
 								<h3><a href="#">Search</a></h3>
-								<p>We have achieved searching by keywords,images or faces. And the results can be sorted by relevance or date.
+								<p>We have achieved searching by keywords or images. And the results can be sorted by relevance or date.
 									Besides, we use Levenshtein to analyze the news.</p>
 							</div>
 						</div>
@@ -161,7 +183,7 @@
 				<div class="row">
 					<div class="col-md-3 fh5co-widget">
 						<h4>About This Web</h4>
-						<p>It' a web about sport news. You can search the news by keyword or photo.</p>
+						<p>It' a web about sport news. You can search the news by keyword and photo and faces.</p>
 					</div>
 					<div class="col-md-3 col-md-push-1">
 						<h4>Data source</h4>

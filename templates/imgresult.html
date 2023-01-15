@@ -55,6 +55,7 @@
 								<ul class="dropdown">
 									<li><a href="./word">Search by words</a></li>
 									<li><a href="./img">Search by image</a></li>
+									<li><a href="./face">Search by face</a></li>
 								</ul>
 							</li>
 							<li><a href="https://github.com/JerryPW/final_project_EE208">About</a></li>
@@ -107,7 +108,7 @@
 						<p>Total {{res_cnt}} results.</p>
 					</div>
 				</div>
-					{%for i in range(0, res_cnt)%}
+					{%for i in range(0, 3)%}
 						<div class="col-md-4 text-center animate-box">
 							<a href="res_list[i]" class="work" style="background-image: url({{res_list[i]}});"></a>
 						</div>

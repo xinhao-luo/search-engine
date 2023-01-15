@@ -34,6 +34,7 @@ import PIL
 import os
 import numpy as np
 import cv2
+import extract_faces
 
 title = ''
 url = ''
@@ -42,7 +43,7 @@ app = Flask(__name__,static_url_path='/static')
 
 ##关键词搜索
 def search(keyword):
-    STORE_DIR = "163_index"
+    STORE_DIR = "index"
     vm.attachCurrentThread()
     directory=SimpleFSDirectory(File(STORE_DIR).toPath())
     searcher=IndexSearcher(DirectoryReader.open(directory))
@@ -68,7 +69,6 @@ def get_res(searcher,analyzer,keyword):
         res['url']=doc.get('url')
         res['date']=doc.get('date')
         res['contents'] = urllib.request.urlopen(doc.get('url'))
-        res['filename']=doc.get('filename')
         res['img']=doc.get('img')
         res_list.append(res)
     res_list = simility(res_list)
@@ -107,7 +107,7 @@ def timeCompare(time1, time2): # 1 -> time1 >= time2; 0 -> times2 > time1
 #相似度
 def simility(res_list):
     simility = []
-    length = len(res_list)
+    length = len(res_list) 
     length1 = length
     pos = 1
     while(pos < length1):
@@ -126,12 +126,15 @@ def simility(res_list):
                 res_list[pos]['contents'], res_list[maxq]['contents'] = res_list[maxq]['contents'], res_list[pos]['contents']
                 res_list[pos]['img'], res_list[maxq]['img'] = res_list[maxq]['img'], res_list[pos]['img']
                 pos += 1
+
             else:
                 break
             length -= 1
         pos += 1
+        simility = []
     return res_list
 
+#图像搜索
 def queryPicture(picture): # picture is an array
     def get_picture(picture):
         cap = cv2.VideoCapture(picture)
@@ -200,7 +203,7 @@ def queryPicture(picture): # picture is an array
     target_feature = extract(img)
     gp = LSH(extract(img)) # 0, 1, 2
     root = get_path(gp)
-    root1 = "static/images/LSH_data/" + root
+    root1 = "LSH_data/" + root
     matched = []
     for root2, dir, file in os.walk(root1, topdown=False):
         for name in file:
@@ -211,6 +214,71 @@ def queryPicture(picture): # picture is an array
                 matched.append("../static/images/LSH_data/{}/{}".format(root, name))
     
     return matched
+
+#人脸搜索#
+def face_search(filename):
+    ex=extract_faces.face_recognition()
+    faces_cnt,faces=ex.extract(filename)
+    return faces_cnt,faces
+
+def face_match(res_list):
+    def get_picture(picture):
+        cap = cv2.VideoCapture(picture)
+        ret,img = cap.read()
+        return img
+    
+    def get_color(img1):
+        img = np.array(img1)
+        feature = []
+        sum = img.sum()
+        for i in range(3):
+            uni_img = img[:, :, i]
+            img_color = uni_img.sum()
+            feature.append(img_color/sum)
+        return feature
+    
+    def distribution(feature):
+        distribute = []
+        for i in feature:
+            if i >= 0 and i < 0.3:
+                distribute.append(0)
+            elif i >= 0.3 and i < 0.36:
+                distribute.append(1)
+            elif i >= 0.36:
+                distribute.append(2)
+        return distribute
+    
+    def extract(img):
+        H = img.shape[0]
+        W = img.shape[1]
+        midH = H // 2
+        midW = W // 2
+        feature = []
+        img1 = img[0:midH, 0:midW, :]
+        img2 = img[0:midH, midW:, :]
+        img3 = img[midH:, 0:midW, :]
+        img4 = img[midH:, midW:, :]
+        img_set = [img1, img2, img3, img4]
+        for uni_img in img_set:
+            feature += get_color(uni_img)
+        feature = distribution(feature)
+        return np.array(feature)
+    
+    for i in range(len(res_list)):
+        img = get_picture(res_list[i])
+        target_feature = extract(img)
+        root1 = "static/faces_h"
+        matched = []
+        for root2, dir, file in os.walk(root1, topdown=False):
+            for name in file:
+                img = cv2.imread(os.path.join(root2, name), cv2.IMREAD_COLOR)
+                feature = extract(img)
+                dis = np.linalg.norm(feature - target_feature)
+                print("--", dis)
+                if dis == 0:
+                    matched.append("../static/faces_h/{}".format(name))
+    
+    return len(matched), matched
 
 @app.route('/')
 def form_1():
@@ -224,6 +292,10 @@ def form_2():
 def form_3():
     return render_template("img.html")
 
+@app.route('/face')
+def form_4():
+    return render_template("face.html")
+
 @app.route('/wdresult', methods=['GET','POST'])
 def wd_result():
     keyword=request.args.get('keyword')
@@ -235,11 +307,25 @@ def wd_result():
 def img_result():
    pic = request.files['file'] # 得到照片的url
    vm.attachCurrentThread()
-   pic = str(pic)[15:24]
+
+   start = str(pic).index("'") + 1
+   l = str(pic)[str(pic).index("'")+1:].index("'")
+   pic = str(pic)[start:start + l]
    searchResult = queryPicture(pic)
    print(searchResult)
    length = len(searchResult)
    return render_template('imgresult.html', res_list = searchResult, res_cnt = length)
+
+@app.route('/faceresult', methods=['GET','POST'])
+def face_result():
+    pic=request.files['file'] #获取网页上传的图片
+    start = str(pic).index("'") + 1
+    l = str(pic)[str(pic).index("'")+1:].index("'")
+    pic = str(pic)[start:start + l]
+    res_cnt,res_list=face_search(pic)
+
+    match_cnt,match_list=face_match(res_list)
+    return render_template("faceresult.html",res_cnt=res_cnt,res_list=res_list,match_cnt=match_cnt,match_list=match_list)
 
 if __name__ == '__main__':
     last_search = ''
